@@ -14,6 +14,16 @@
 #ifndef _Adafruit_MCP23017_H_
 #define _Adafruit_MCP23017_H_
 
+#if defined (SPARK)
+#include "application.h"
+
+#define bitRead(value, bit) (((value) >> (bit)) & 0x01)
+#define bitSet(value, bit) ((value) |= (1UL << (bit)))
+#define bitClear(value, bit) ((value) &= ~(1UL << (bit)))
+#define bitWrite(value, bit, bitvalue) (bitvalue ? bitSet(value, bit) : bitClear(value, bit))
+
+#endif
+
 // Don't forget the Wire library
 class Adafruit_MCP23017 {
 public:
@@ -27,9 +37,28 @@ public:
 
   void writeGPIOAB(uint16_t);
   uint16_t readGPIOAB();
+  uint8_t readGPIO(uint8_t b);
+
+  void setupInterrupts(uint8_t mirroring, uint8_t open, uint8_t polarity);
+  void setupInterruptPin(uint8_t p, uint8_t mode);
+  uint8_t getLastInterruptPin();
+  uint8_t getLastInterruptPinValue();
 
  private:
   uint8_t i2caddr;
+
+  uint8_t bitForPin(uint8_t pin);
+  uint8_t regForPin(uint8_t pin, uint8_t portAaddr, uint8_t portBaddr);
+
+  uint8_t readRegister(uint8_t addr);
+  void writeRegister(uint8_t addr, uint8_t value);
+
+  /**
+   * Utility private method to update a register associated with a pin (whether port A/B)
+   * reads its value, updates the particular bit, and writes its value.
+   */
+  void updateRegisterBit(uint8_t p, uint8_t pValue, uint8_t portAaddr, uint8_t portBaddr);
+
 };
 
 #define MCP23017_ADDRESS 0x20
@@ -60,4 +89,7 @@ public:
 #define MCP23017_GPIOB 0x13
 #define MCP23017_OLATB 0x15
 
+#define MCP23017_INT_ERR 255
+
 #endif
+
